@@ -15,7 +15,7 @@ describe('Property 6: Swing step timing', () => {
     fc.assert(
       fc.property(
         fc.float({ min: 0, max: Math.fround(100), noNaN: true }),              // baseTime
-        fc.integer({ min: 0, max: 15 }),                                       // stepIndex
+        fc.integer({ min: 0, max: 31 }),                                       // stepIndex
         fc.float({ min: Math.fround(0.001), max: 1, noNaN: true }),            // stepDuration
         fc.float({ min: 0, max: Math.fround(0.33), noNaN: true }),             // swing
         (baseTime, stepIndex, stepDuration, swing) => {

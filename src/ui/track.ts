@@ -1,31 +1,17 @@
-import { InstrumentName, TrackState, FxState } from '../state.js';
+import { InstrumentName, TrackState, FxState, STEP_COUNT } from '../state.js';
 import { createKnob } from './knob.js';
 import { createStepButton } from './stepButton.js';
 
-/** Synthesis param ranges per instrument. */
 const PARAM_RANGES: Record<string, { min: number; max: number; unit?: string }> = {
-  tune:      { min: 40,   max: 12000 },
-  snap:      { min: 1,    max: 80,    unit: 'ms' },
-  decay:     { min: 5,    max: 3000,  unit: 'ms' },
-  tone:      { min: 0,    max: 1 },
-  level:     { min: 0,    max: 1 },
-  cutoff:    { min: 200,  max: 8000,  unit: 'Hz' },
-  resonance: { min: 0,    max: 30 },
-  envAmt:    { min: 0,    max: 1 },
+  tune: { min: 40, max: 12000 }, snap: { min: 1, max: 80, unit: 'ms' },
+  decay: { min: 5, max: 3000, unit: 'ms' }, tone: { min: 0, max: 1 },
+  level: { min: 0, max: 1 }, cutoff: { min: 200, max: 6000, unit: 'Hz' },
+  resonance: { min: 0, max: 20 },
 };
 
-function createSection(title: string, className: string): { section: HTMLElement; body: HTMLElement } {
-  const section = document.createElement('div');
-  section.className = `track-section ${className}`;
-  const header = document.createElement('div');
-  header.className = 'section-title';
-  header.textContent = title;
-  const body = document.createElement('div');
-  body.className = 'section-body';
-  section.appendChild(header);
-  section.appendChild(body);
-  return { section, body };
-}
+const DISPLAY_NAMES: Partial<Record<InstrumentName, string>> = {
+  closedHat: 'C.Hat', openHat: 'O.Hat', blip2: 'Blip 2',
+};
 
 export interface TrackCallbacks {
   onStepToggle: (step: number, active: boolean) => void;
@@ -36,134 +22,97 @@ export interface TrackCallbacks {
   onSwingChange: (swing: number) => void;
 }
 
-export function createTrackRow(
-  name: InstrumentName,
-  trackState: TrackState,
-  callbacks: TrackCallbacks,
-): HTMLElement {
+export function createTrackRow(name: InstrumentName, trackState: TrackState, cb: TrackCallbacks): HTMLElement {
   const row = document.createElement('div');
   row.className = 'track-row';
 
-  // --- Track header: label + S/M buttons ---
+  // Header: label + S/M
   const header = document.createElement('div');
   header.className = 'track-header';
-
   const label = document.createElement('span');
   label.className = 'track-label';
-  label.textContent = name === 'closedHat' ? 'C.Hat'
-    : name === 'openHat' ? 'O.Hat'
-    : name.charAt(0).toUpperCase() + name.slice(1);
+  label.textContent = DISPLAY_NAMES[name] ?? name.charAt(0).toUpperCase() + name.slice(1);
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'track-btn-row';
 
   const soloBtn = document.createElement('button');
   soloBtn.className = 'track-solo-btn';
   soloBtn.textContent = 'S';
-  soloBtn.title = 'Solo';
   if (trackState.solo) soloBtn.dataset.active = '';
   soloBtn.addEventListener('click', () => {
-    const isActive = soloBtn.dataset.active !== undefined;
-    if (isActive) {
-      delete soloBtn.dataset.active;
-      callbacks.onSoloToggle(false);
-    } else {
-      soloBtn.dataset.active = '';
-      callbacks.onSoloToggle(true);
-    }
+    const on = soloBtn.dataset.active !== undefined;
+    if (on) { delete soloBtn.dataset.active; cb.onSoloToggle(false); }
+    else { soloBtn.dataset.active = ''; cb.onSoloToggle(true); }
   });
 
   const muteBtn = document.createElement('button');
   muteBtn.className = 'track-mute-btn';
   muteBtn.textContent = 'M';
-  muteBtn.title = 'Mute';
   if (trackState.muted) muteBtn.dataset.active = '';
   muteBtn.addEventListener('click', () => {
-    const isActive = muteBtn.dataset.active !== undefined;
-    if (isActive) {
-      delete muteBtn.dataset.active;
-      callbacks.onMuteToggle(false);
-    } else {
-      muteBtn.dataset.active = '';
-      callbacks.onMuteToggle(true);
-    }
+    const on = muteBtn.dataset.active !== undefined;
+    if (on) { delete muteBtn.dataset.active; cb.onMuteToggle(false); }
+    else { muteBtn.dataset.active = ''; cb.onMuteToggle(true); }
   });
 
+  btnRow.appendChild(soloBtn);
+  btnRow.appendChild(muteBtn);
   header.appendChild(label);
-  header.appendChild(soloBtn);
-  header.appendChild(muteBtn);
+  header.appendChild(btnRow);
   row.appendChild(header);
 
-  // --- Step sequencer section ---
-  const { section: seqSection, body: seqBody } = createSection('STEPS', 'section-steps');
+  // Steps — 8 groups of 4
   const stepsContainer = document.createElement('div');
   stepsContainer.className = 'track-steps';
-  for (let g = 0; g < 4; g++) {
+  const groupCount = STEP_COUNT / 4;
+  for (let g = 0; g < groupCount; g++) {
     const group = document.createElement('div');
     group.className = 'step-group';
     for (let s = 0; s < 4; s++) {
-      const stepIndex = g * 4 + s;
-      const btn = createStepButton(trackState.steps[stepIndex], (active) => {
-        callbacks.onStepToggle(stepIndex, active);
-      });
+      const idx = g * 4 + s;
+      const btn = createStepButton(trackState.steps[idx], (active) => cb.onStepToggle(idx, active));
       group.appendChild(btn);
     }
     stepsContainer.appendChild(group);
   }
-  seqBody.appendChild(stepsContainer);
-  row.appendChild(seqSection);
+  row.appendChild(stepsContainer);
 
-  // --- Synth params section ---
-  const { section: synthSection, body: synthBody } = createSection('SYNTH', 'section-synth');
-  synthBody.className += ' knob-row';
+  // Synth knobs
+  const synthPanel = document.createElement('div');
+  synthPanel.className = 'track-knobs';
   for (const [param, value] of Object.entries(trackState.params)) {
     const range = PARAM_RANGES[param] ?? { min: 0, max: 1 };
-    const knob = createKnob({
-      label: param,
-      min: range.min,
-      max: range.max,
-      default: value,
-      unit: range.unit,
-      onChange: (v) => callbacks.onParamChange(param, v),
-    });
-    synthBody.appendChild(knob);
+    synthPanel.appendChild(createKnob({
+      label: param, min: range.min, max: range.max, default: value, unit: range.unit,
+      onChange: (v) => cb.onParamChange(param, v),
+    }));
   }
-  // Swing knob per track
-  const swingKnob = createKnob({
-    label: 'swing',
-    min: 0,
-    max: 0.33,
-    default: trackState.swing,
-    onChange: (v) => callbacks.onSwingChange(v),
-  });
-  synthBody.appendChild(swingKnob);
-  row.appendChild(synthSection);
+  synthPanel.appendChild(createKnob({
+    label: 'swing', min: 0, max: 0.33, default: trackState.swing,
+    onChange: (v) => cb.onSwingChange(v),
+  }));
+  row.appendChild(synthPanel);
 
-  // --- FX section ---
-  const { section: fxSection, body: fxBody } = createSection('FX', 'section-fx');
-  fxBody.className += ' knob-row';
-
-  const fxDefs: { key: keyof FxState; label: string; min: number; max: number; unit?: string }[] = [
-    { key: 'reverbMix',  label: 'reverb',  min: 0,    max: 1 },
-    { key: 'delayMix',   label: 'delay',   min: 0,    max: 1 },
-    { key: 'delayTime',  label: 'dly.t',   min: 0.01, max: 1, unit: 's' },
-    { key: 'distortion', label: 'dist',    min: 0,    max: 1 },
+  // FX knobs
+  const fxPanel = document.createElement('div');
+  fxPanel.className = 'track-fx';
+  const fxDefs: { key: keyof FxState; label: string }[] = [
+    { key: 'reverb', label: 'rev' },
+    { key: 'delay', label: 'dly' },
+    { key: 'distortion', label: 'dist' },
   ];
-
   for (const def of fxDefs) {
-    const knob = createKnob({
-      label: def.label,
-      min: def.min,
-      max: def.max,
-      default: trackState.fx[def.key],
-      unit: def.unit,
-      onChange: (v) => callbacks.onFxChange(def.key, v),
-    });
-    fxBody.appendChild(knob);
+    fxPanel.appendChild(createKnob({
+      label: def.label, min: 0, max: 1, default: trackState.fx[def.key],
+      onChange: (v) => cb.onFxChange(def.key, v),
+    }));
   }
-  row.appendChild(fxSection);
+  row.appendChild(fxPanel);
 
   return row;
 }
 
-/** Returns all step buttons within a track row in order. */
 export function getStepButtons(row: HTMLElement): HTMLButtonElement[] {
   return Array.from(row.querySelectorAll<HTMLButtonElement>('.step-btn'));
 }

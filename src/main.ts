@@ -1,10 +1,6 @@
-/**
- * Entry point — wires all modules together.
- */
-
 import './style.css';
 
-import { AppState, FxState, INSTRUMENT_NAMES, InstrumentName, MasterFxState, defaultState } from './state.js';
+import { AppState, FxState, INSTRUMENT_NAMES, InstrumentName, defaultState } from './state.js';
 import { saveState, loadState } from './persistence.js';
 import { validateState } from './validateState.js';
 import { getAudioContext, resumeAudioContext } from './audio/context.js';
@@ -15,15 +11,12 @@ import { createClap } from './audio/clap.js';
 import { createHiHat } from './audio/hihat.js';
 import { createTom } from './audio/tom.js';
 import { createBlip } from './audio/blip.js';
-import { createAcid } from './audio/acid.js';
+import { createStab } from './audio/stab.js';
 import { createSequencer, Voices } from './sequencer.js';
 import { createTransport } from './ui/transport.js';
 import { createTrackRow, getStepButtons } from './ui/track.js';
 import { setPlaying } from './ui/stepButton.js';
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
 let appState: AppState = validateState(loadState()) ?? defaultState();
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -32,42 +25,34 @@ function debouncedSave(): void {
   saveTimer = setTimeout(() => saveState(appState), 50);
 }
 
-// ---------------------------------------------------------------------------
-// Audio
-// ---------------------------------------------------------------------------
 const audioContext = getAudioContext();
 const masterGain = getMasterGain();
 
-const kick      = createKick(audioContext, masterGain);
-const snare     = createSnare(audioContext, masterGain);
-const clap      = createClap(audioContext, masterGain);
-const hihat     = createHiHat(audioContext, masterGain);
-const tom       = createTom(audioContext, masterGain);
-const blip      = createBlip(audioContext, masterGain);
-const acid      = createAcid(audioContext, masterGain);
+const kick  = createKick(audioContext, masterGain);
+const snare = createSnare(audioContext, masterGain);
+const clap  = createClap(audioContext, masterGain);
+const hihat = createHiHat(audioContext, masterGain);
+const tom   = createTom(audioContext, masterGain);
+const blip  = createBlip(audioContext, masterGain);
+const blip2 = createBlip(audioContext, masterGain); // second blip instance
+const stab  = createStab(audioContext, masterGain);
 
 setMasterVolume(appState.masterVolume);
 
 const voices: Voices = {
-  kick, snare, clap,
-  closedHat: hihat,
-  openHat: hihat,
-  tom, blip, acid,
+  kick, snare, clap, closedHat: hihat, openHat: hihat, tom, blip, blip2, stab,
 };
 
 const sequencer = createSequencer(audioContext, () => appState, voices);
 
-// ---------------------------------------------------------------------------
-// DOM structure
-// ---------------------------------------------------------------------------
 const app = document.getElementById('app') ?? document.body;
 
-// Header
+// Header — centred
 const headerEl = document.createElement('div');
 headerEl.className = 'app-header';
 const titleEl = document.createElement('span');
 titleEl.className = 'app-title';
-titleEl.textContent = 'HYPNO';
+titleEl.textContent = 'Hypno Drum Machine v0.1';
 headerEl.appendChild(titleEl);
 app.appendChild(headerEl);
 
@@ -75,14 +60,11 @@ app.appendChild(headerEl);
 const transport = createTransport({
   bpm: appState.bpm,
   masterVolume: appState.masterVolume,
-  masterFx: appState.masterFx,
-
   onPlay: async () => {
     await resumeAudioContext();
     sequencer.start();
     sequencer.startVisualSync(updateVisualStep);
   },
-
   onStop: () => {
     sequencer.stop();
     sequencer.stopVisualSync();
@@ -90,26 +72,15 @@ const transport = createTransport({
       for (const btn of getStepButtons(row)) setPlaying(btn, false);
     }
   },
-
-  onBpmChange: (bpm) => {
-    appState = { ...appState, bpm };
-    debouncedSave();
-  },
-
+  onBpmChange: (bpm) => { appState = { ...appState, bpm }; debouncedSave(); },
   onMasterVolumeChange: (vol) => {
     appState = { ...appState, masterVolume: vol };
     setMasterVolume(vol);
     debouncedSave();
   },
-
-  onMasterFxChange: (param: keyof MasterFxState, value: number) => {
-    appState = { ...appState, masterFx: { ...appState.masterFx, [param]: value } };
-    debouncedSave();
-  },
 });
 app.appendChild(transport);
 
-// Track rows
 const trackRows = new Map<InstrumentName, HTMLElement>();
 
 for (const name of INSTRUMENT_NAMES) {
@@ -117,75 +88,35 @@ for (const name of INSTRUMENT_NAMES) {
     onStepToggle: (step, active) => {
       const steps = [...appState.tracks[name].steps];
       steps[step] = active;
-      appState = {
-        ...appState,
-        tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], steps } },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], steps } } };
       debouncedSave();
     },
-
     onParamChange: (param, value) => {
-      appState = {
-        ...appState,
-        tracks: {
-          ...appState.tracks,
-          [name]: {
-            ...appState.tracks[name],
-            params: { ...appState.tracks[name].params, [param]: value },
-          },
-        },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], params: { ...appState.tracks[name].params, [param]: value } } } };
       debouncedSave();
     },
-
     onFxChange: (param: keyof FxState, value: number) => {
-      appState = {
-        ...appState,
-        tracks: {
-          ...appState.tracks,
-          [name]: {
-            ...appState.tracks[name],
-            fx: { ...appState.tracks[name].fx, [param]: value },
-          },
-        },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], fx: { ...appState.tracks[name].fx, [param]: value } } } };
       debouncedSave();
     },
-
     onMuteToggle: (muted) => {
-      appState = {
-        ...appState,
-        tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], muted } },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], muted } } };
       debouncedSave();
     },
-
     onSoloToggle: (solo) => {
-      appState = {
-        ...appState,
-        tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], solo } },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], solo } } };
       debouncedSave();
     },
-
     onSwingChange: (swing) => {
-      appState = {
-        ...appState,
-        tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], swing } },
-      };
+      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], swing } } };
       debouncedSave();
     },
   });
-
   trackRows.set(name, row);
   app.appendChild(row);
 }
 
-// ---------------------------------------------------------------------------
-// Visual sync
-// ---------------------------------------------------------------------------
 let lastVisualStep = -1;
-
 function updateVisualStep(step: number): void {
   if (step === lastVisualStep) return;
   lastVisualStep = step;

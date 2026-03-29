@@ -1,235 +1,112 @@
-/* Hypno — Dark industrial theme */
-
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
   background: #0a0a0a;
-  color: #cccccc;
+  color: #ccc;
   font-family: monospace;
   margin: 0;
-  padding: 16px;
+  padding: 8px;
 }
 
-#app {
-  max-width: 1300px;
-  margin: 0 auto;
-}
+#app { max-width: 1400px; margin: 0 auto; }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* Header */
 .app-header {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 8px 4px 16px;
+  justify-content: center;
+  padding: 6px 0 10px;
 }
-
 .app-title {
-  font-size: 42px;
+  font-size: 28px;
   font-weight: 900;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   color: #f5a623;
-  text-shadow: 0 0 24px rgba(245, 166, 35, 0.5), 0 0 4px rgba(245, 166, 35, 0.8);
+  text-shadow: 0 0 16px rgba(245,166,35,0.5), 0 0 3px rgba(245,166,35,0.8);
   user-select: none;
 }
 
-/* ── Transport wrapper ───────────────────────────────────────────────────── */
-.transport-wrapper {
-  background: #111;
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
-  padding: 10px 14px;
-  margin-bottom: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
+/* Transport */
 .transport {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.transport button {
-  background: #1e1e1e;
-  color: #cccccc;
-  border: 1px solid #444;
-  border-radius: 3px;
-  padding: 6px 16px;
-  font-family: monospace;
-  font-size: 16px;
-  cursor: pointer;
-}
-.transport button:hover { background: #2a2a2a; }
-
-.transport-bpm-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  font-size: 12px;
-}
-
-/* ── Master FX section ───────────────────────────────────────────────────── */
-.master-fx-section {
+  gap: 12px;
+  padding: 6px 10px;
+  background: #111;
   border: 1px solid #2a2a2a;
   border-radius: 4px;
-  padding: 6px 10px;
-  background: #0e0e0e;
+  margin-bottom: 6px;
+}
+.transport button {
+  background: #1e1e1e; color: #ccc; border: 1px solid #444;
+  border-radius: 3px; padding: 4px 12px; font-family: monospace;
+  font-size: 14px; cursor: pointer;
+}
+.transport button:hover { background: #2a2a2a; }
+.transport-bpm-label {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 1px; font-size: 10px;
 }
 
-/* ── Track rows ──────────────────────────────────────────────────────────── */
+/* Track rows */
 .track-row {
   display: flex;
-  align-items: stretch;
-  gap: 8px;
-  margin: 5px 0;
-  background: #0e0e0e;
-  border: 1px solid #1e1e1e;
-  border-radius: 6px;
-  padding: 6px 8px;
-}
-
-/* Track header: label + S/M */
-.track-header {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 52px;
-  flex-shrink: 0;
+  gap: 6px;
+  margin: 2px 0;
+  background: #0e0e0e;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  padding: 3px 6px;
 }
 
+.track-header {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; width: 44px; flex-shrink: 0;
+}
 .track-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #aaa;
-  text-align: center;
+  font-size: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: #999; text-align: center; line-height: 1;
 }
-
-.track-solo-btn,
-.track-mute-btn {
-  width: 22px;
-  height: 18px;
-  font-size: 9px;
-  font-family: monospace;
-  font-weight: bold;
-  border-radius: 2px;
-  border: 1px solid #444;
-  cursor: pointer;
-  padding: 0;
-  background: #1e1e1e;
-  color: #888;
-  letter-spacing: 0;
+.track-btn-row { display: flex; gap: 2px; }
+.track-solo-btn, .track-mute-btn {
+  width: 18px; height: 14px; font-size: 8px; font-family: monospace;
+  font-weight: bold; border-radius: 2px; border: 1px solid #444;
+  cursor: pointer; padding: 0; background: #1e1e1e; color: #666;
 }
-.track-solo-btn:hover { background: #2a2a2a; color: #f5a623; }
-.track-mute-btn:hover { background: #2a2a2a; color: #e05555; }
+.track-solo-btn:hover { color: #f5a623; }
+.track-mute-btn:hover { color: #e05555; }
 .track-solo-btn[data-active] { background: #f5a623; color: #000; border-color: #f5a623; }
 .track-mute-btn[data-active] { background: #e05555; color: #fff; border-color: #e05555; }
 
-/* ── Boxed sections ──────────────────────────────────────────────────────── */
-.track-section {
-  border: 1px solid #2a2a2a;
-  border-radius: 4px;
-  padding: 4px 8px 6px;
-  background: #111;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.section-title {
-  font-size: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #555;
-  margin-bottom: 2px;
-}
-
-.section-body {
-  display: flex;
-  align-items: center;
-}
-
-.knob-row {
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-/* ── Step sequencer section ──────────────────────────────────────────────── */
-.section-steps { flex-shrink: 0; }
-
-.track-steps {
-  display: flex;
-  gap: 4px;
-}
-
-.step-group {
-  display: flex;
-  gap: 3px;
-  margin-right: 4px;
-}
-
+/* Steps */
+.track-steps { display: flex; gap: 2px; flex-shrink: 0; }
+.step-group { display: flex; gap: 1px; margin-right: 3px; }
 .step-btn {
-  width: 26px;
-  height: 26px;
-  background: #2a2a2a;
-  border: 1px solid #3a3a3a;
-  border-radius: 3px;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.05s;
+  width: 18px; height: 18px; background: #2a2a2a; border: 1px solid #333;
+  border-radius: 2px; cursor: pointer; padding: 0; transition: background 0.05s;
 }
 .step-btn:hover { background: #3a3a3a; }
 .step-btn[data-active] { background: #f5a623; border-color: #f5a623; }
-.step-btn[data-playing] { outline: 2px solid #ffffff; outline-offset: 1px; }
+.step-btn[data-playing] { outline: 2px solid #fff; outline-offset: 0px; }
 .step-btn[data-active][data-playing] { background: #f5a623; outline: 2px solid #fff; }
 
-/* ── Synth / FX sections ─────────────────────────────────────────────────── */
-.section-synth { flex: 1; min-width: 0; }
-.section-fx { flex-shrink: 0; }
-
-/* ── Knob component ──────────────────────────────────────────────────────── */
-.knob {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
+/* Knob panels */
+.track-knobs, .track-fx { display: flex; gap: 4px; flex-shrink: 0; }
+.track-fx {
+  border-left: 1px solid #2a2a2a;
+  padding-left: 6px;
+  margin-left: 2px;
 }
 
-.knob-label {
-  font-size: 8px;
-  text-transform: uppercase;
-  color: #666;
-  letter-spacing: 0.05em;
-}
-
+/* Knob */
+.knob { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; }
+.knob-label { font-size: 7px; text-transform: uppercase; color: #555; letter-spacing: 0.04em; }
 .knob-dial {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #1e1e1e;
-  border: 2px solid #f5a623;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
+  width: 26px; height: 26px; border-radius: 50%; background: #1e1e1e;
+  border: 2px solid #f5a623; cursor: pointer; position: relative; user-select: none;
 }
-
 .knob-indicator {
-  position: absolute;
-  top: 3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 9px;
-  background: #f5a623;
-  border-radius: 1px;
+  position: absolute; top: 2px; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 7px; background: #f5a623; border-radius: 1px;
 }
-
-.knob-value {
-  font-size: 8px;
-  color: #888;
-}
+.knob-value { font-size: 7px; color: #777; }

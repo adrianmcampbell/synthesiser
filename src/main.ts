@@ -1,6 +1,6 @@
 import './style.css';
 
-import { AppState, FxState, INSTRUMENT_NAMES, InstrumentName, defaultState } from './state.js';
+import { AppState, INSTRUMENT_NAMES, InstrumentName, defaultState } from './state.js';
 import { saveState, loadState } from './persistence.js';
 import { validateState } from './validateState.js';
 import { getAudioContext, resumeAudioContext } from './audio/context.js';
@@ -11,6 +11,7 @@ import { createClap } from './audio/clap.js';
 import { createHiHat } from './audio/hihat.js';
 import { createTom } from './audio/tom.js';
 import { createBlip } from './audio/blip.js';
+import { createBlip3 } from './audio/blip3.js';
 import { createStab } from './audio/stab.js';
 import { createSequencer, Voices } from './sequencer.js';
 import { createTransport } from './ui/transport.js';
@@ -34,20 +35,20 @@ const clap  = createClap(audioContext, masterGain);
 const hihat = createHiHat(audioContext, masterGain);
 const tom   = createTom(audioContext, masterGain);
 const blip  = createBlip(audioContext, masterGain);
-const blip2 = createBlip(audioContext, masterGain); // second blip instance
+const blip2 = createBlip(audioContext, masterGain);
+const blip3 = createBlip3(audioContext, masterGain);
 const stab  = createStab(audioContext, masterGain);
 
 setMasterVolume(appState.masterVolume);
 
 const voices: Voices = {
-  kick, snare, clap, closedHat: hihat, openHat: hihat, tom, blip, blip2, stab,
+  kick, snare, clap, closedHat: hihat, openHat: hihat, tom, blip, blip2, blip3, stab,
 };
 
 const sequencer = createSequencer(audioContext, () => appState, voices);
 
 const app = document.getElementById('app') ?? document.body;
 
-// Header — centred
 const headerEl = document.createElement('div');
 headerEl.className = 'app-header';
 const titleEl = document.createElement('span');
@@ -56,7 +57,6 @@ titleEl.textContent = 'Hypno Drum Machine v0.1';
 headerEl.appendChild(titleEl);
 app.appendChild(headerEl);
 
-// Transport
 const transport = createTransport({
   bpm: appState.bpm,
   masterVolume: appState.masterVolume,
@@ -93,10 +93,6 @@ for (const name of INSTRUMENT_NAMES) {
     },
     onParamChange: (param, value) => {
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], params: { ...appState.tracks[name].params, [param]: value } } } };
-      debouncedSave();
-    },
-    onFxChange: (param: keyof FxState, value: number) => {
-      appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], fx: { ...appState.tracks[name].fx, [param]: value } } } };
       debouncedSave();
     },
     onMuteToggle: (muted) => {

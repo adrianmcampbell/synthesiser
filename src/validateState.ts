@@ -1,6 +1,6 @@
 import {
   defaultState, STEP_COUNT, INSTRUMENT_NAMES,
-  type AppState, type FxState, type InstrumentName, type TrackState,
+  type AppState, type InstrumentName, type TrackState,
 } from './state';
 
 function clamp(v: number, min: number, max: number): number {
@@ -16,18 +16,9 @@ const PARAM_RANGES: Record<InstrumentName, Record<string, [number, number]>> = {
   tom:       { tune: [60, 500],    decay: [50, 1500],  level: [0, 1] },
   blip:      { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
   blip2:     { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
-  stab:      { tune: [60, 800],    cutoff: [200, 6000], resonance: [0, 20], decay: [30, 800], level: [0, 1] },
+  blip3:     { tune: [100, 3000],  decay: [10, 500],   feedback: [0, 1],   level: [0, 1] },
+  stab:      { tune: [40, 400],    cutoff: [100, 4000], resonance: [0, 25], decay: [50, 1500], level: [0, 1] },
 };
-
-function validateFx(raw: unknown, defaults: FxState): FxState {
-  if (raw === null || typeof raw !== 'object') return { ...defaults };
-  const o = raw as Record<string, unknown>;
-  return {
-    reverb:     typeof o.reverb     === 'number' ? clamp(o.reverb, 0, 1)     : defaults.reverb,
-    delay:      typeof o.delay      === 'number' ? clamp(o.delay, 0, 1)      : defaults.delay,
-    distortion: typeof o.distortion === 'number' ? clamp(o.distortion, 0, 1) : defaults.distortion,
-  };
-}
 
 function validateTrack(raw: unknown, instrument: InstrumentName): TrackState {
   const defaults = defaultState().tracks[instrument];
@@ -43,15 +34,11 @@ function validateTrack(raw: unknown, instrument: InstrumentName): TrackState {
 
   const params: Record<string, number> = {};
   const rawParams = raw !== null && typeof raw === 'object'
-    ? ((raw as Record<string, unknown>).params as Record<string, unknown> | undefined)
-    : undefined;
+    ? ((raw as Record<string, unknown>).params as Record<string, unknown> | undefined) : undefined;
   for (const [key, [min, max]] of Object.entries(ranges)) {
     const v = rawParams?.[key];
     params[key] = typeof v === 'number' && isFinite(v) ? clamp(v, min, max) : defaults.params[key];
   }
-
-  const rawFx = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>).fx : undefined;
-  const fx = validateFx(rawFx, defaults.fx);
 
   const rawMuted = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>).muted : undefined;
   const muted = typeof rawMuted === 'boolean' ? rawMuted : false;
@@ -62,7 +49,7 @@ function validateTrack(raw: unknown, instrument: InstrumentName): TrackState {
   const rawSwing = raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>).swing : undefined;
   const swing = typeof rawSwing === 'number' && isFinite(rawSwing) ? clamp(rawSwing, 0, 0.33) : 0;
 
-  return { steps, params, fx, muted, solo, swing };
+  return { steps, params, muted, solo, swing };
 }
 
 export function validateState(raw: unknown): AppState {
@@ -75,9 +62,7 @@ export function validateState(raw: unknown): AppState {
 
   const rawTracks = obj.tracks !== null && typeof obj.tracks === 'object' ? (obj.tracks as Record<string, unknown>) : {};
   const tracks = {} as AppState['tracks'];
-  for (const name of INSTRUMENT_NAMES) {
-    tracks[name] = validateTrack(rawTracks[name], name);
-  }
+  for (const name of INSTRUMENT_NAMES) tracks[name] = validateTrack(rawTracks[name], name);
 
   return { bpm, masterVolume, tracks };
 }

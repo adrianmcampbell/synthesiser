@@ -1,22 +1,21 @@
-import { InstrumentName, TrackState, FxState, STEP_COUNT } from '../state.js';
+import { InstrumentName, TrackState, STEP_COUNT } from '../state.js';
 import { createKnob } from './knob.js';
 import { createStepButton } from './stepButton.js';
 
 const PARAM_RANGES: Record<string, { min: number; max: number; unit?: string }> = {
   tune: { min: 40, max: 12000 }, snap: { min: 1, max: 80, unit: 'ms' },
   decay: { min: 5, max: 3000, unit: 'ms' }, tone: { min: 0, max: 1 },
-  level: { min: 0, max: 1 }, cutoff: { min: 200, max: 6000, unit: 'Hz' },
-  resonance: { min: 0, max: 20 },
+  level: { min: 0, max: 1 }, cutoff: { min: 100, max: 4000, unit: 'Hz' },
+  resonance: { min: 0, max: 25 }, feedback: { min: 0, max: 1 },
 };
 
 const DISPLAY_NAMES: Partial<Record<InstrumentName, string>> = {
-  closedHat: 'C.Hat', openHat: 'O.Hat', blip2: 'Blip 2',
+  closedHat: 'C.Hat', openHat: 'O.Hat', blip2: 'Blip 2', blip3: 'Blip 3',
 };
 
 export interface TrackCallbacks {
   onStepToggle: (step: number, active: boolean) => void;
   onParamChange: (param: string, value: number) => void;
-  onFxChange: (param: keyof FxState, value: number) => void;
   onMuteToggle: (muted: boolean) => void;
   onSoloToggle: (solo: boolean) => void;
   onSwingChange: (swing: number) => void;
@@ -26,7 +25,7 @@ export function createTrackRow(name: InstrumentName, trackState: TrackState, cb:
   const row = document.createElement('div');
   row.className = 'track-row';
 
-  // Header: label + S/M
+  // Header
   const header = document.createElement('div');
   header.className = 'track-header';
   const label = document.createElement('span');
@@ -62,17 +61,15 @@ export function createTrackRow(name: InstrumentName, trackState: TrackState, cb:
   header.appendChild(btnRow);
   row.appendChild(header);
 
-  // Steps — 8 groups of 4
+  // Steps
   const stepsContainer = document.createElement('div');
   stepsContainer.className = 'track-steps';
-  const groupCount = STEP_COUNT / 4;
-  for (let g = 0; g < groupCount; g++) {
+  for (let g = 0; g < STEP_COUNT / 4; g++) {
     const group = document.createElement('div');
     group.className = 'step-group';
     for (let s = 0; s < 4; s++) {
       const idx = g * 4 + s;
-      const btn = createStepButton(trackState.steps[idx], (active) => cb.onStepToggle(idx, active));
-      group.appendChild(btn);
+      group.appendChild(createStepButton(trackState.steps[idx], (active) => cb.onStepToggle(idx, active)));
     }
     stepsContainer.appendChild(group);
   }
@@ -93,22 +90,6 @@ export function createTrackRow(name: InstrumentName, trackState: TrackState, cb:
     onChange: (v) => cb.onSwingChange(v),
   }));
   row.appendChild(synthPanel);
-
-  // FX knobs
-  const fxPanel = document.createElement('div');
-  fxPanel.className = 'track-fx';
-  const fxDefs: { key: keyof FxState; label: string }[] = [
-    { key: 'reverb', label: 'rev' },
-    { key: 'delay', label: 'dly' },
-    { key: 'distortion', label: 'dist' },
-  ];
-  for (const def of fxDefs) {
-    fxPanel.appendChild(createKnob({
-      label: def.label, min: 0, max: 1, default: trackState.fx[def.key],
-      onChange: (v) => cb.onFxChange(def.key, v),
-    }));
-  }
-  row.appendChild(fxPanel);
 
   return row;
 }

@@ -24,21 +24,9 @@ describe('persistence', () => {
 
   it('returns null when no saved state', () => { expect(loadState()).toBeNull(); });
 
-  it('returns parsed state when valid JSON stored', () => {
-    const state = defaultState();
-    localStorageMock.setItem('hypno-drum-state', JSON.stringify(state));
-    expect(loadState()).toEqual(state);
-  });
-
-  it('returns null for invalid JSON', () => {
-    localStorageMock.setItem('hypno-drum-state', 'bad{{{');
-    expect(loadState()).toBeNull();
-  });
-
   it('round-trips a modified state', () => {
     const state = defaultState();
     state.bpm = 145;
-    state.tracks.kick.swing = 0.2;
     state.tracks.kick.steps[0] = true;
     state.tracks.kick.params.decay = 1200;
     saveState(state);

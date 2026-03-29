@@ -13,15 +13,15 @@ A browser-based drum machine built for hypnotic techno. All sounds are synthesis
 | O.Hat   | Same metallic mix as closed hat, longer decay, retrigger support |
 | Tom     | Sine oscillator with pitch and amplitude envelope |
 | Blip    | Sine through a waveshaper — rimshots, cowbells, metallic clicks |
-| Blip 2  | Higher-pitched blip variant with more distortion character |
-| Stab    | Detuned sawtooth pair through bandpass filter — dubby techno stabs |
+| Blip 2  | Higher-pitched waveshaper blip variant |
+| Blip 3  | FM synthesis metallic percussion — bell-like / inharmonic tones |
+| Stab    | 3× detuned sawtooths + sub oscillator through resonant lowpass — thick dubby stabs |
 
 ## Features
 
 - 32-step sequencer per instrument with lookahead scheduling
 - Per-track swing (0–33%)
 - Solo / Mute buttons on every track
-- Per-track FX: reverb, delay, distortion
 - Pattern persistence via localStorage
 - Dark industrial UI — compact single-screen layout
 

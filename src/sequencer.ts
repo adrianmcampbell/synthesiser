@@ -9,6 +9,7 @@ export interface Voices {
   tom: { trigger(time: number, params: Record<string, number>): void };
   blip: { trigger(time: number, params: Record<string, number>): void };
   blip2: { trigger(time: number, params: Record<string, number>): void };
+  blip3: { trigger(time: number, params: Record<string, number>): void };
   stab: { trigger(time: number, params: Record<string, number>): void };
 }
 
@@ -37,6 +38,7 @@ export function createSequencer(audioContext: AudioContext, getState: () => AppS
       case 'tom':       voices.tom.trigger(time, params); break;
       case 'blip':      voices.blip.trigger(time, params); break;
       case 'blip2':     voices.blip2.trigger(time, params); break;
+      case 'blip3':     voices.blip3.trigger(time, params); break;
       case 'stab':      voices.stab.trigger(time, params); break;
     }
   }

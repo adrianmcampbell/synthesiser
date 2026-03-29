@@ -24,31 +24,23 @@ const RANGES: Record<InstrumentName, Record<string, [number, number]>> = {
   tom:       { tune: [60, 500],    decay: [50, 1500],  level: [0, 1] },
   blip:      { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
   blip2:     { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
-  stab:      { tune: [60, 800],    cutoff: [200, 6000], resonance: [0, 20], decay: [30, 800], level: [0, 1] },
+  blip3:     { tune: [100, 3000],  decay: [10, 500],   feedback: [0, 1],   level: [0, 1] },
+  stab:      { tune: [40, 400],    cutoff: [100, 4000], resonance: [0, 25], decay: [50, 1500], level: [0, 1] },
 };
 
-function arbTrack(instrument: InstrumentName) {
-  const paramArbs = Object.fromEntries(
-    Object.entries(RANGES[instrument]).map(([k, [min, max]]) => [
-      k, fc.float({ min: Math.fround(min), max: Math.fround(max), noNaN: true }),
-    ])
-  );
+function arbTrack(inst: InstrumentName) {
+  const p = Object.fromEntries(Object.entries(RANGES[inst]).map(([k, [min, max]]) => [k, fc.float({ min: Math.fround(min), max: Math.fround(max), noNaN: true })]));
   return fc.record({
-    steps:  fc.array(fc.boolean(), { minLength: STEP_COUNT, maxLength: STEP_COUNT }),
-    params: fc.record(paramArbs),
-    swing:  fc.double({ min: 0, max: 0.33, noNaN: true }),
-    muted:  fc.boolean(),
-    solo:   fc.boolean(),
-    fx: fc.record({
-      reverb:     fc.float({ min: 0, max: 1, noNaN: true }),
-      delay:      fc.float({ min: 0, max: 1, noNaN: true }),
-      distortion: fc.float({ min: 0, max: 1, noNaN: true }),
-    }),
+    steps: fc.array(fc.boolean(), { minLength: STEP_COUNT, maxLength: STEP_COUNT }),
+    params: fc.record(p),
+    swing: fc.double({ min: 0, max: 0.33, noNaN: true }),
+    muted: fc.boolean(),
+    solo: fc.boolean(),
   });
 }
 
 const arbAppState: fc.Arbitrary<AppState> = fc.record({
-  bpm:          fc.integer({ min: 60, max: 200 }),
+  bpm: fc.integer({ min: 60, max: 200 }),
   masterVolume: fc.float({ min: 0, max: 1, noNaN: true }),
   tracks: fc.record(
     Object.fromEntries(INSTRUMENT_NAMES.map((n) => [n, arbTrack(n)])) as Record<InstrumentName, fc.Arbitrary<AppState['tracks'][InstrumentName]>>
@@ -57,12 +49,7 @@ const arbAppState: fc.Arbitrary<AppState> = fc.record({
 
 describe('persistence — PBT', () => {
   beforeEach(() => { localStorageMock.clear(); vi.clearAllMocks(); });
-
-  it('Property 5: round-trip serialisation', () => {
-    fc.assert(fc.property(arbAppState, (state) => {
-      localStorageMock.clear();
-      saveState(state);
-      expect(loadState()).toEqual(state);
-    }));
+  it('round-trip serialisation', () => {
+    fc.assert(fc.property(arbAppState, (state) => { localStorageMock.clear(); saveState(state); expect(loadState()).toEqual(state); }));
   });
 });

@@ -36,10 +36,9 @@ const PARAM_RANGES: Record<InstrumentName, Record<string, [number, number]>> = {
   blip:      { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
   blip2:     { tune: [200, 4000],  tone: [0, 1],       decay: [5, 300],    level: [0, 1] },
   blip3:     { tune: [100, 3000],  decay: [10, 500],   feedback: [0, 1],   level: [0, 1] },
-  stab:      { tune: [40, 400],    cutoff: [100, 4000], resonance: [0, 25], decay: [50, 1500], level: [0, 1] },
 };
 
-const ALL: InstrumentName[] = ['kick','snare','clap','closedHat','openHat','tom','blip','blip2','blip3','stab'];
+const ALL: InstrumentName[] = ['kick','snare','clap','closedHat','openHat','tom','blip','blip2','blip3'];
 
 function arbTrack(inst: InstrumentName) {
   const p: Record<string, fc.Arbitrary<number>> = {};

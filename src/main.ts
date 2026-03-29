@@ -1,8 +1,6 @@
 import './style.css';
 
 import { AppState, INSTRUMENT_NAMES, InstrumentName, defaultState } from './state.js';
-import { saveState, loadState } from './persistence.js';
-import { validateState } from './validateState.js';
 import { getAudioContext, resumeAudioContext } from './audio/context.js';
 import { getMasterGain, setMasterVolume } from './audio/mixer.js';
 import { createKick } from './audio/kick.js';
@@ -12,19 +10,13 @@ import { createHiHat } from './audio/hihat.js';
 import { createTom } from './audio/tom.js';
 import { createBlip } from './audio/blip.js';
 import { createBlip3 } from './audio/blip3.js';
-import { createStab } from './audio/stab.js';
 import { createSequencer, Voices } from './sequencer.js';
 import { createTransport } from './ui/transport.js';
 import { createTrackRow, getStepButtons } from './ui/track.js';
 import { setPlaying } from './ui/stepButton.js';
 
-let appState: AppState = validateState(loadState()) ?? defaultState();
-
-let saveTimer: ReturnType<typeof setTimeout> | null = null;
-function debouncedSave(): void {
-  if (saveTimer !== null) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => saveState(appState), 50);
-}
+// Always start fresh
+let appState: AppState = defaultState();
 
 const audioContext = getAudioContext();
 const masterGain = getMasterGain();
@@ -37,12 +29,11 @@ const tom   = createTom(audioContext, masterGain);
 const blip  = createBlip(audioContext, masterGain);
 const blip2 = createBlip(audioContext, masterGain);
 const blip3 = createBlip3(audioContext, masterGain);
-const stab  = createStab(audioContext, masterGain);
 
 setMasterVolume(appState.masterVolume);
 
 const voices: Voices = {
-  kick, snare, clap, closedHat: hihat, openHat: hihat, tom, blip, blip2, blip3, stab,
+  kick, snare, clap, closedHat: hihat, openHat: hihat, tom, blip, blip2, blip3,
 };
 
 const sequencer = createSequencer(audioContext, () => appState, voices);
@@ -72,11 +63,10 @@ const transport = createTransport({
       for (const btn of getStepButtons(row)) setPlaying(btn, false);
     }
   },
-  onBpmChange: (bpm) => { appState = { ...appState, bpm }; debouncedSave(); },
+  onBpmChange: (bpm) => { appState = { ...appState, bpm }; },
   onMasterVolumeChange: (vol) => {
     appState = { ...appState, masterVolume: vol };
     setMasterVolume(vol);
-    debouncedSave();
   },
 });
 app.appendChild(transport);
@@ -89,23 +79,18 @@ for (const name of INSTRUMENT_NAMES) {
       const steps = [...appState.tracks[name].steps];
       steps[step] = active;
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], steps } } };
-      debouncedSave();
     },
     onParamChange: (param, value) => {
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], params: { ...appState.tracks[name].params, [param]: value } } } };
-      debouncedSave();
     },
     onMuteToggle: (muted) => {
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], muted } } };
-      debouncedSave();
     },
     onSoloToggle: (solo) => {
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], solo } } };
-      debouncedSave();
     },
     onSwingChange: (swing) => {
       appState = { ...appState, tracks: { ...appState.tracks, [name]: { ...appState.tracks[name], swing } } };
-      debouncedSave();
     },
   });
   trackRows.set(name, row);

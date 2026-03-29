@@ -21,11 +21,6 @@ describe('defaultState()', () => {
     for (const name of INSTRUMENT_NAMES) expect(defaultState().tracks[name].steps.every((s) => !s)).toBe(true);
   });
 
-  it('stab has correct defaults', () => {
-    const { params } = defaultState().tracks.stab;
-    expect(params.tune).toBe(110); expect(params.cutoff).toBe(600);
-  });
-
   it('blip3 has correct defaults', () => {
     const { params } = defaultState().tracks.blip3;
     expect(params.tune).toBe(440); expect(params.feedback).toBe(0.5);

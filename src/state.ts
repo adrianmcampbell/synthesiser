@@ -2,10 +2,10 @@ export const STEP_COUNT = 32;
 
 export type InstrumentName =
   | 'kick' | 'snare' | 'clap' | 'closedHat' | 'openHat'
-  | 'tom' | 'blip' | 'blip2' | 'blip3' | 'stab';
+  | 'tom' | 'blip' | 'blip2' | 'blip3';
 
 export const INSTRUMENT_NAMES: InstrumentName[] = [
-  'kick', 'snare', 'clap', 'closedHat', 'openHat', 'tom', 'blip', 'blip2', 'blip3', 'stab',
+  'kick', 'snare', 'clap', 'closedHat', 'openHat', 'tom', 'blip', 'blip2', 'blip3',
 ];
 
 export interface TrackState {
@@ -32,7 +32,6 @@ const DEFAULT_PARAMS: Record<InstrumentName, Record<string, number>> = {
   blip:      { tune: 800, tone: 0.3, decay: 80, level: 0.7 },
   blip2:     { tune: 1600, tone: 0.6, decay: 40, level: 0.65 },
   blip3:     { tune: 440, decay: 60, feedback: 0.5, level: 0.6 },
-  stab:      { tune: 110, cutoff: 600, resonance: 12, decay: 300, level: 0.8 },
 };
 
 function defaultTrack(instrument: InstrumentName): TrackState {
